@@ -54,8 +54,8 @@ button,select{font:inherit}
 }
 
 .header-logo img{
-  width:100px;
-  height:100px;
+  width:120px;
+  height:120px;
   object-fit:contain;
 }
 
@@ -713,5 +713,59 @@ button,select{font:inherit}
   .print-break-before{
     break-before:page;
     page-break-before:always;
+  }
+}
+
+
+/* =========================================================
+   CUMULATIVE PAGE ONLY
+   These rules do not change the Monthly dashboard layout.
+========================================================= */
+
+.cumulative-page .filters.cumulative-filters{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+}
+
+.cumulative-page .cumulative-period{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-top:7px;
+  padding:5px 10px;
+  background:#eef4ff;
+  border:1px solid #dbe7ff;
+  color:#173f93;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+}
+
+.cumulative-page .planned-note{
+  margin-top:5px;
+  font-size:10px;
+  color:#6c7688;
+}
+
+@media(max-width:1180px){
+  .cumulative-page .filters.cumulative-filters{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:650px){
+  .cumulative-page .filters.cumulative-filters{
+    grid-template-columns:1fr;
+  }
+}
+
+@media print{
+  .cumulative-page .cumulative-period{
+    font-size:7px;
+    padding:3px 7px;
+    margin-top:3px;
+  }
+
+  .cumulative-page .planned-note{
+    font-size:6px;
   }
 }
