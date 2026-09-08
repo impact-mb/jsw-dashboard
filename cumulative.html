@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>JSW Cumulative Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+
+<body data-mode="Cumulative" data-file="data/cumulative_data.csv">
+<div class="dashboard">
+
+<header class="dashboard-header">
+  <div class="header-logo">
+    <img src="assets/images/magicbus_logo.png" alt="Magic Bus Logo">
+  </div>
+
+  <div class="header-center">
+    <div class="eyebrow">JSW FOUNDATION</div>
+    <h1>Cumulative Impact Dashboard</h1>
+    <p id="reportingLabel">Loading data...</p>
+  </div>
+
+  <div class="header-logo">
+    <img src="assets/images/logo_jsw.png" alt="JSW Logo">
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="page-switch">
+    <a href="index.html" class="page-link ">Monthly</a>
+    <a href="cumulative.html" class="page-link active">Cumulative</a>
+  </div>
+
+  <button class="print-button" onclick="preparePrint()">
+    🖨 Print / Save PDF
+  </button>
+</div>
+
+<div class="filter-wrapper">
+  <div class="filters">
+    <div class="filter-group">
+      <label>Financial Year</label>
+      <select id="fyFilter"></select>
+    </div>
+
+    <div class="filter-group">
+      <label>Month of Reporting</label>
+      <button id="monthButton" class="multi-button">
+        <span id="monthButtonText">Select Month(s)</span>
+        <span>▾</span>
+      </button>
+      <div id="monthMenu" class="multi-menu">
+        <div class="multi-actions">
+          <button class="mini-button" onclick="selectAllMonths()">Select All</button>
+          <button class="mini-button" onclick="clearMonths()">Clear</button>
+        </div>
+        <div id="monthOptions"></div>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <label>Region</label>
+      <select id="regionFilter"></select>
+    </div>
+
+    <div class="filter-group">
+      <label>State</label>
+      <select id="stateFilter"></select>
+    </div>
+
+    <div class="filter-group">
+      <label>District</label>
+      <button id="districtButton" class="multi-button">
+        <span id="districtButtonText">All Districts</span>
+        <span>▾</span>
+      </button>
+      <div id="districtMenu" class="multi-menu">
+        <div class="multi-actions">
+          <button class="mini-button" onclick="selectAllDistricts()">Select All</button>
+          <button class="mini-button" onclick="clearDistricts()">Clear</button>
+        </div>
+        <div id="districtOptions"></div>
+      </div>
+    </div>
+
+    <button class="reset-button" onclick="resetFilters()">Reset</button>
+  </div>
+</div>
+
+<div id="status" class="status">Loading data/cumulative_data.csv ...</div>
+<div id="filterSummary" class="filter-summary"></div>
+<div id="printFilterInfo" class="print-filter-info"></div>
+
+<!-- 1 -->
+<section class="section">
+  <div class="section-heading">
+    <div class="section-number">1</div>
+    <div>
+      <h2>Number of Communities and Schools covered</h2>
+      <p>District-wise coverage</p>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="card-topline">
+        <div class="card-title-wrap"><h3>Communities Covered</h3></div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-communityChart')">Export ▾</button>
+        <div id="export-communityChart" class="export-menu">
+          <button onclick="exportChartPNG('communityChart')">Download PNG</button>
+          <button onclick="exportChartCSV('communityChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="communityChart" class="chart"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-topline">
+        <div class="card-title-wrap"><h3>Schools Covered</h3></div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-schoolChart')">Export ▾</button>
+        <div id="export-schoolChart" class="export-menu">
+          <button onclick="exportChartPNG('schoolChart')">Download PNG</button>
+          <button onclick="exportChartCSV('schoolChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="schoolChart" class="chart"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 and 2.1 -->
+<section class="section">
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">2</div>
+          <div><h3>Target & Achieved Life Skill Outreach</h3></div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-lsOutreachChart')">Export ▾</button>
+        <div id="export-lsOutreachChart" class="export-menu">
+          <button onclick="exportChartPNG('lsOutreachChart')">Download PNG</button>
+          <button onclick="exportChartCSV('lsOutreachChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="lsOutreachChart" class="chart"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">2.1</div>
+          <div><h3>Gender Distribution of Life Skill Programmes</h3></div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-lsGenderChart')">Export ▾</button>
+        <div id="export-lsGenderChart" class="export-menu">
+          <button onclick="exportChartPNG('lsGenderChart')">Download PNG</button>
+          <button onclick="exportChartCSV('lsGenderChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="lsGenderChart" class="chart"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2.2 -->
+<section class="section">
+  <div class="chart-card">
+    <div class="card-topline">
+      <div class="card-heading">
+        <div class="card-number">2.2</div>
+        <div>
+          <h3>Life Skill Sessions Attended (in %)</h3>
+          <p>Percent of adolescents who have attended at least 1 Life Skill session</p>
+        </div>
+      </div>
+      
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-lsAttendanceChart')">Export ▾</button>
+        <div id="export-lsAttendanceChart" class="export-menu">
+          <button onclick="exportChartPNG('lsAttendanceChart')">Download PNG</button>
+          <button onclick="exportChartCSV('lsAttendanceChart')">Download CSV</button>
+        </div>
+      </div>
+    
+    </div>
+    <div id="lsAttendanceChart" class="chart chart-small"></div>
+  </div>
+</section>
+
+<!-- 3 and 3.1 -->
+<section class="section">
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">3</div>
+          <div><h3>Target & Achieved CLC Outreach</h3></div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-clcOutreachChart')">Export ▾</button>
+        <div id="export-clcOutreachChart" class="export-menu">
+          <button onclick="exportChartPNG('clcOutreachChart')">Download PNG</button>
+          <button onclick="exportChartCSV('clcOutreachChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="clcOutreachChart" class="chart"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">3.1</div>
+          <div><h3>Gender Distribution of CLC Programmes</h3></div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-clcGenderChart')">Export ▾</button>
+        <div id="export-clcGenderChart" class="export-menu">
+          <button onclick="exportChartPNG('clcGenderChart')">Download PNG</button>
+          <button onclick="exportChartCSV('clcGenderChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="clcGenderChart" class="chart"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3.2 -->
+<section class="section">
+  <div class="chart-card">
+    <div class="card-topline">
+      <div class="card-heading">
+        <div class="card-number">3.2</div>
+        <div>
+          <h3>CLC Sessions Attended (in %)</h3>
+          <p>Percent of adolescents who have attended at least 1 CLC session</p>
+        </div>
+      </div>
+      
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-clcAttendanceChart')">Export ▾</button>
+        <div id="export-clcAttendanceChart" class="export-menu">
+          <button onclick="exportChartPNG('clcAttendanceChart')">Download PNG</button>
+          <button onclick="exportChartCSV('clcAttendanceChart')">Download CSV</button>
+        </div>
+      </div>
+    
+    </div>
+    <div id="clcAttendanceChart" class="chart chart-small"></div>
+  </div>
+</section>
+
+<!-- print page break -->
+<section class="section print-break-before">
+  <div class="section-heading">
+    <div class="section-number">4</div>
+    <div>
+      <h2>Life Skill and CLC Session Distribution (in %)</h2>
+      <p>Percent of adolescents attended sessions — Touchpoints-specific distribution</p>
+    </div>
+  </div>
+
+  <div class="chart-grid">
+    <div class="chart-card">
+      <div class="card-topline">
+        <div class="card-title-wrap"><h3>Life Skill Session Distribution</h3></div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-lsDistributionChart')">Export ▾</button>
+        <div id="export-lsDistributionChart" class="export-menu">
+          <button onclick="exportChartPNG('lsDistributionChart')">Download PNG</button>
+          <button onclick="exportChartCSV('lsDistributionChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="lsDistributionChart" class="chart"></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-topline">
+        <div class="card-title-wrap"><h3>CLC Session Distribution</h3></div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-clcDistributionChart')">Export ▾</button>
+        <div id="export-clcDistributionChart" class="export-menu">
+          <button onclick="exportChartPNG('clcDistributionChart')">Download PNG</button>
+          <button onclick="exportChartCSV('clcDistributionChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="clcDistributionChart" class="chart"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 and 6 -->
+<section class="section">
+  <div class="chart-grid">
+    <div class="chart-card counter-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">5</div>
+          <div><h3>House Visits</h3></div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-houseVisitsChart')">Export ▾</button>
+        <div id="export-houseVisitsChart" class="export-menu">
+          <button onclick="exportChartPNG('houseVisitsChart')">Download PNG</button>
+          <button onclick="exportChartCSV('houseVisitsChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="houseVisitsChart" class="chart chart-small"></div>
+    </div>
+
+    <div class="chart-card counter-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">6</div>
+          <div>
+            <h3>Events</h3>
+            <p>Planned vs Delivered</p>
+          </div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-eventsChart')">Export ▾</button>
+        <div id="export-eventsChart" class="export-menu">
+          <button onclick="exportChartPNG('eventsChart')">Download PNG</button>
+          <button onclick="exportChartCSV('eventsChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="eventsChart" class="chart chart-small"></div>
+    </div>
+  </div>
+</section>
+
+<!-- print page break -->
+<section class="section print-break-before">
+  <div class="chart-grid">
+    <div class="chart-card counter-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">7</div>
+          <div><h3>Parents Engaged</h3></div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-parentsChart')">Export ▾</button>
+        <div id="export-parentsChart" class="export-menu">
+          <button onclick="exportChartPNG('parentsChart')">Download PNG</button>
+          <button onclick="exportChartCSV('parentsChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="parentsChart" class="chart chart-small"></div>
+    </div>
+
+    <div class="chart-card counter-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">8</div>
+          <div><h3>No. of Bal Panchayats Formed</h3></div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-balPanchayatChart')">Export ▾</button>
+        <div id="export-balPanchayatChart" class="export-menu">
+          <button onclick="exportChartPNG('balPanchayatChart')">Download PNG</button>
+          <button onclick="exportChartCSV('balPanchayatChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="balPanchayatChart" class="chart chart-small"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="chart-grid">
+    <div class="chart-card counter-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">9</div>
+          <div>
+            <h3>Educators Training</h3>
+            <p>MB Staff Training</p>
+          </div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-educatorTrainingChart')">Export ▾</button>
+        <div id="export-educatorTrainingChart" class="export-menu">
+          <button onclick="exportChartPNG('educatorTrainingChart')">Download PNG</button>
+          <button onclick="exportChartCSV('educatorTrainingChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="educatorTrainingChart" class="chart chart-small"></div>
+    </div>
+
+    <div class="chart-card counter-card">
+      <div class="card-topline">
+        <div class="card-heading">
+          <div class="card-number">10</div>
+          <div><h3>Sustainability (School Staff Training)</h3></div>
+        </div>
+        
+      <div class="export-wrap">
+        <button class="export-button" onclick="toggleExportMenu(event,'export-sustainabilityChart')">Export ▾</button>
+        <div id="export-sustainabilityChart" class="export-menu">
+          <button onclick="exportChartPNG('sustainabilityChart')">Download PNG</button>
+          <button onclick="exportChartCSV('sustainabilityChart')">Download CSV</button>
+        </div>
+      </div>
+    
+      </div>
+      <div id="sustainabilityChart" class="chart chart-small"></div>
+    </div>
+  </div>
+</section>
+
+<section class="notes-footer">
+  <h3>Notes</h3>
+  <p>Notes will be added later.</p>
+</section>
+
+<footer class="site-footer">
+  <span>JSW Cumulative Impact Dashboard</span>
+  <span>Magic Bus India Foundation</span>
+</footer>
+
+</div>
+
+<script src="assets/dashboard.js"></script>
+</body>
+</html>
