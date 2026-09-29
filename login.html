@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSW Impact Dashboard | Login</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    .login-card {
+      width: min(460px, 100%);
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      box-shadow: 0 22px 60px rgba(15,23,42,.12);
+      overflow: hidden;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px 28px 18px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .brand-row img {
+      max-width: 120px;
+      max-height: 78px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .content { padding: 30px; }
+    .eyebrow {
+      margin: 0 0 7px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.2;
+    }
+    .subtitle {
+      margin: 9px 0 25px;
+      font-size: 14px;
+      line-height: 1.55;
+      color: #64748b;
+    }
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+    input {
+      width: 100%;
+      height: 46px;
+      padding: 0 13px;
+      margin-bottom: 18px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      background: #ffffff;
+      font-size: 15px;
+      color: #0f172a;
+      outline: none;
+    }
+    input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+    }
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 78px; }
+    .show-btn {
+      position: absolute;
+      right: 10px;
+      top: 34px;
+      border: 0;
+      background: transparent;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 7px 8px;
+    }
+    .login-btn {
+      width: 100%;
+      height: 46px;
+      border: 0;
+      border-radius: 10px;
+      background: #0f172a;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .error {
+      display: none;
+      margin-top: 14px;
+      padding: 11px 12px;
+      border: 1px solid #fecaca;
+      border-radius: 9px;
+      background: #fef2f2;
+      color: #991b1b;
+      font-size: 13px;
+    }
+    .privacy {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 12px;
+      line-height: 1.55;
+      color: #64748b;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="login-card">
+    <div class="brand-row">
+      <img src="assets/images/magicbus_logo.png" alt="Magic Bus Logo" />
+      <img src="assets/images/logo_jsw.png" alt="JSW Foundation Logo" />
+    </div>
+
+    <section class="content">
+      <p class="eyebrow">Authorized Access</p>
+      <h1>JSW Impact Dashboard</h1>
+      <p class="subtitle">Sign in to access the Monthly and Cumulative programme dashboards.</p>
+
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" placeholder="Enter username" required />
+
+        <div class="password-wrap">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter password" required />
+          <button type="button" class="show-btn" id="showPassword">Show</button>
+        </div>
+
+        <button type="submit" class="login-btn">Sign in</button>
+        <div class="error" id="loginError">Invalid username or password.</div>
+      </form>
+
+      <div class="privacy">This dashboard contains approved aggregated programme reporting data only.</div>
+    </section>
+  </main>
+
+  <script>
+    const USERS = {
+      "mbif_admin": {
+        role: "MBIF Admin",
+        passwordHash: "ecbdbdd886816ff3ec6e833066defff3ab0dd5fcda572091c0c2fdaa0637b7b8"
+      },
+      "jsw_viewer": {
+        role: "JSW Viewer",
+        passwordHash: "b63ebb2ab3fb022b9096f395be309ac298f96b446fda062cfefdb470cd3fa2d4"
+      }
+    };
+
+    async function sha256(value) {
+      const encoded = new TextEncoder().encode(value);
+      const digest = await crypto.subtle.digest("SHA-256", encoded);
+      return [...new Uint8Array(digest)]
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    function getSafeDestination() {
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next") || "index.html";
+      if (next.startsWith("http://") || next.startsWith("https://") || next.startsWith("//") || next.includes("..")) {
+        return "index.html";
+      }
+      return next;
+    }
+
+    document.getElementById("showPassword").addEventListener("click", () => {
+      const input = document.getElementById("password");
+      const button = document.getElementById("showPassword");
+      if (input.type === "password") {
+        input.type = "text";
+        button.textContent = "Hide";
+      } else {
+        input.type = "password";
+        button.textContent = "Show";
+      }
+    });
+
+    document.getElementById("loginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const error = document.getElementById("loginError");
+      error.style.display = "none";
+
+      const user = USERS[username];
+      if (!user) {
+        error.style.display = "block";
+        return;
+      }
+
+      const hash = await sha256(password);
+      if (hash !== user.passwordHash) {
+        error.style.display = "block";
+        return;
+      }
+
+      sessionStorage.setItem("jswDashboardAuth", JSON.stringify({
+        username,
+        role: user.role,
+        authenticatedAt: new Date().toISOString()
+      }));
+
+      window.location.replace(getSafeDestination());
+    });
+  </script>
+</body>
+</html>
