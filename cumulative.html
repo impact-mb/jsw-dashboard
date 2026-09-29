@@ -8,7 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-<link rel="stylesheet" href="assets/styles.css">
+<link rel="stylesheet" href="assets/styles.css?v=2.0.3">
 </head>
 
 <body class="cumulative-page">
@@ -21,16 +21,12 @@
 
   <div class="header-center">
     <div class="eyebrow">JSW FOUNDATION</div>
-    <h1>Cumulative Dashboard</h1>
+    <h1>JSW Cumulative Dashboard</h1>
     <div id="periodBadge" class="cumulative-period">Loading...</div>
   </div>
 
   <div class="header-logo">
-     <div class="header-logo">
-    <img src="assets/images/logo_jsw.png"
-     class="jsw-logo"
-     alt="JSW Logo">
-  </div>
+    <img src="assets/images/logo_jsw.png" alt="JSW Logo">
   </div>
 </header>
 
@@ -47,6 +43,11 @@
 
 <div class="filter-wrapper">
   <div class="filters cumulative-filters">
+
+    <div class="filter-group">
+      <label>Financial Year</label>
+      <select id="fyFilter"></select>
+    </div>
 
     <div class="filter-group">
       <label>Reporting Period</label>
@@ -78,6 +79,11 @@
         </div>
         <div id="districtOptions"></div>
       </div>
+    </div>
+
+    <div class="filter-group cumulative-reset-group">
+      <label>&nbsp;</label>
+      <button id="resetFilters" class="reset-button" type="button">↺ Reset Filters</button>
     </div>
 
   </div>
@@ -476,6 +482,6 @@
 
 </div>
 
-<script src="assets/cumulative.js"></script>
+<script src="assets/cumulative.js?v=2.0.3"></script>
 </body>
 </html>

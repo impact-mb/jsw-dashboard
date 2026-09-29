@@ -54,17 +54,8 @@ button,select{font:inherit}
 }
 
 .header-logo img{
-  max-width:120px;
-  max-height:120px;
-  width:auto;
-  height:auto;
-  object-fit:contain;
-}
-
-.header-logo .jsw-logo{
-  width:135px;
-  max-width:135px;
-  height:auto;
+  width:120px;
+  height:120px;
   object-fit:contain;
 }
 
@@ -732,7 +723,7 @@ button,select{font:inherit}
 ========================================================= */
 
 .cumulative-page .filters.cumulative-filters{
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(6,minmax(0,1fr));
 }
 
 .cumulative-page .cumulative-period{
@@ -776,5 +767,36 @@ button,select{font:inherit}
 
   .cumulative-page .planned-note{
     font-size:6px;
+  }
+}
+
+/* v2.0.3 - cumulative filter alignment */
+@media (min-width: 1051px){
+  .cumulative-page .filters.cumulative-filters{
+    grid-template-columns:repeat(6,minmax(0,1fr)) !important;
+  }
+}
+
+@media (min-width: 701px) and (max-width:1050px){
+  .cumulative-page .filters.cumulative-filters{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+@media (max-width:700px){
+  .cumulative-page .filters.cumulative-filters{
+    grid-template-columns:1fr !important;
+  }
+}
+
+
+/* Cumulative reset button */
+.cumulative-page .cumulative-reset-group .reset-button{
+  width:100%;
+}
+
+@media print{
+  .cumulative-page .cumulative-reset-group{
+    display:none !important;
   }
 }

@@ -14,6 +14,7 @@ const COLORS = {
 const state = {
   allData:[],
   data:[],
+  fy:null,
   selectedPeriod:null,
   selectedOrder:null,
   region:"All",
@@ -411,26 +412,62 @@ function renderCharts(){
 }
 
 
-/* ---------------- Reporting Period ---------------- */
+/* ---------------- Financial Year + Reporting Period ---------------- */
+
+function fyOptions(){
+  return unique(
+    state.allData.map(row=>row.fy)
+  ).sort((a,b)=>{
+    const ay = Number(String(a).match(/(\d{4})/)?.[1] || 0);
+    const by = Number(String(b).match(/(\d{4})/)?.[1] || 0);
+    return ay - by;
+  });
+}
+
+function populateFYFilter(){
+  const select = $("fyFilter");
+  select.innerHTML = "";
+
+  const years = fyOptions();
+
+  years.forEach(fy=>{
+    const option = document.createElement("option");
+    option.value = fy;
+    option.textContent = fy;
+    select.appendChild(option);
+  });
+
+  if(!state.fy && years.length){
+    state.fy = years[years.length-1];
+  }
+
+  if(!years.includes(state.fy) && years.length){
+    state.fy = years[years.length-1];
+  }
+
+  select.value = state.fy;
+}
 
 function periodOptions(){
   const map = new Map();
 
-  state.allData.forEach(row=>{
-    const order = Number(row.period_order) || 0;
-    const label = row.period || "";
+  state.allData
+    .filter(row=>row.fy===state.fy)
+    .forEach(row=>{
+      const order = Number(row.period_order) || 0;
+      const label = row.period || "";
 
-    if(label){
-      map.set(order,label);
-    }
-  });
+      if(label){
+        map.set(order,label);
+      }
+    });
 
   return [...map.entries()]
     .sort((a,b)=>a[0]-b[0])
     .map(([order,label])=>({order,label}));
 }
 
-function populatePeriodFilter(){
+function populatePeriodFilter(selectLatest=false){
   const select = $("periodFilter");
   select.innerHTML = "";
 
@@ -443,10 +480,19 @@ function populatePeriodFilter(){
     select.appendChild(option);
   });
 
-  if(state.selectedOrder===null && options.length){
+  const availableOrders = options.map(x=>x.order);
+
+  if(
+    selectLatest ||
+    state.selectedOrder===null ||
+    !availableOrders.includes(Number(state.selectedOrder))
+  ){
     const latest = options[options.length-1];
-    state.selectedOrder = latest.order;
-    state.selectedPeriod = latest.label;
+
+    if(latest){
+      state.selectedOrder = latest.order;
+      state.selectedPeriod = latest.label;
+    }
   }
 
   select.value = String(state.selectedOrder);
@@ -454,7 +500,9 @@ function populatePeriodFilter(){
 
 function applySelectedPeriod(){
   state.data = state.allData.filter(
-    row => Number(row.period_order) === Number(state.selectedOrder)
+    row =>
+      row.fy === state.fy &&
+      Number(row.period_order) === Number(state.selectedOrder)
   );
 
   state.selectedPeriod =
@@ -600,6 +648,13 @@ function refreshGeography(resetDistricts=false){
   buildDistrictFilter(resetDistricts);
 }
 
+$("fyFilter").addEventListener("change",event=>{
+  state.fy = event.target.value;
+  populatePeriodFilter(true);
+  applySelectedPeriod();
+  render();
+});
+
 $("periodFilter").addEventListener("change",event=>{
   state.selectedOrder = Number(event.target.value);
   applySelectedPeriod();
@@ -621,6 +676,29 @@ $("stateFilter").addEventListener("change",event=>{
   render();
 });
 
+
+function resetCumulativeFilters(){
+  const years = fyOptions();
+
+  if(years.length){
+    state.fy = years[years.length-1];
+  }
+
+  populateFYFilter();
+  populatePeriodFilter(true);
+
+  state.region = "All";
+  state.stateName = "All";
+  state.districts = [];
+
+  applySelectedPeriod();
+  render();
+}
+
+$("resetFilters").addEventListener("click",()=>{
+  resetCumulativeFilters();
+});
+
 $("districtButton").addEventListener("click",event=>{
   event.stopPropagation();
   $("districtMenu").classList.toggle("show");
@@ -640,11 +718,12 @@ function render(){
 
   if($("status")){
     $("status").textContent =
-      `Loaded ${state.allData.length.toLocaleString("en-IN")} cumulative rows. Showing ${state.selectedPeriod}.`;
+      `Loaded ${state.allData.length.toLocaleString("en-IN")} cumulative rows. Showing ${state.fy} — ${state.selectedPeriod}.`;
   }
 
   if($("filterSummary")){
     $("filterSummary").innerHTML=`
+      <span class="chip"><strong>FY:</strong> ${state.fy}</span>
       <span class="chip"><strong>Reporting:</strong> ${state.selectedPeriod}</span>
       <span class="chip"><strong>Region:</strong> ${state.region}</span>
       <span class="chip"><strong>State:</strong> ${state.stateName}</span>
@@ -660,6 +739,7 @@ function render(){
 function preparePrint(){
   $("printFilterInfo").innerHTML=`
     <strong>JSW Cumulative Dashboard</strong>
+    &nbsp; | &nbsp; FY: ${state.fy}
     &nbsp; | &nbsp; ${state.selectedPeriod}
     &nbsp; | &nbsp; Region: ${state.region}
     &nbsp; | &nbsp; State: ${state.stateName}
@@ -803,7 +883,7 @@ function safeFileName(value){
 
 function exportSuffix(){
   return safeFileName(
-    `${state.selectedPeriod}_${state.districts.join("-") || "No-District"}`
+    `${state.fy}_${state.selectedPeriod}_${state.districts.join("-") || "No-District"}`
   );
 }
 
@@ -853,6 +933,7 @@ function exportChartCSV(chartID){
   const rows=filteredRows();
 
   const exportColumns=[
+    ["fy","Financial Year"],
     ["period","Reporting Period"],
     ["region","Region"],
     ["state","State"],
@@ -911,6 +992,15 @@ Papa.parse(DATA_FILE,{
       });
 
       clean.period_order=Number(clean.period_order);
+
+      // Fallback for older CSVs where FY may be blank.
+      if(!clean.fy && clean.period_order){
+        const y = Math.floor(clean.period_order / 100);
+        const m = clean.period_order % 100;
+        const startYear = m >= 4 ? y : y - 1;
+        clean.fy = `FY ${startYear}-${String(startYear + 1).slice(-2)}`;
+      }
+
       return clean;
     });
 
@@ -919,17 +1009,12 @@ Papa.parse(DATA_FILE,{
       return;
     }
 
-    const options = periodOptions();
-    const latest = options[options.length-1];
-
-    state.selectedOrder = latest.order;
-    state.selectedPeriod = latest.label;
-
-    populatePeriodFilter();
+    populateFYFilter();
+    populatePeriodFilter(true);
     applySelectedPeriod();
 
     $("status").textContent=
-      `Loaded ${state.allData.length.toLocaleString("en-IN")} cumulative rows. Showing ${state.selectedPeriod}.`;
+      `Loaded ${state.allData.length.toLocaleString("en-IN")} cumulative rows. Showing ${state.fy} — ${state.selectedPeriod}.`;
 
     render();
   },
