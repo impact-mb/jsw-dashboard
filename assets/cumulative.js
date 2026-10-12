@@ -1,5 +1,6 @@
 
-const DATA_FILE = "data/cumulative_data.csv";
+const DATA_FILE =
+  `data/cumulative_data.csv?v=${Date.now()}`;
 
 const COLORS = {
   target:"#94a3b8",

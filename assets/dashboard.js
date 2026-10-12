@@ -1,6 +1,7 @@
 
 const PAGE_MODE = document.body.dataset.mode;
-const DATA_FILE = document.body.dataset.file;
+const DATA_FILE =
+  `${document.body.dataset.file}?v=${Date.now()}`;
 
 const FY_MONTHS = [
   "April","May","June","July","August","September",
